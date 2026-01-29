@@ -1,0 +1,23 @@
+name: AutoLiveYT Engine
+on:
+  repository_dispatch:
+    types: [start_stream]
+
+jobs:
+  stream:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install Tools
+        run: |
+          sudo apt update
+          sudo apt install -y ffmpeg
+          sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
+          sudo chmod a+rx /usr/local/bin/yt-dlp
+
+      - name: Start Live Stream
+        run: |
+          yt-dlp -f "best" -g "${{ github.event.client_payload.url }}" | xargs -I {} ffmpeg -re -i {} -c:v libx264 -preset ultrafast -b:v 3000k -maxrate 3000k -bufsize 6000k -pix_fmt yuv420p -g 60 -c:a aac -b:a 128k -f flv "rtmp://a.rtmp.youtube.com/live2/${{ secrets.YOUTUBE_STREAM_KEY }}"
+          
