@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoLiveYT</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-white flex items-center justify-center min-h-screen">
+    <div class="bg-slate-900 border border-slate-800 p-8 rounded-3xl shadow-2xl w-full max-w-md">
+        <h1 class="text-4xl font-black text-center text-blue-500 mb-2">AutoLiveYT</h1>
+        <p class="text-slate-500 text-center mb-8 text-sm uppercase tracking-widest">Cloud Control Panel</p>
+
+        <div class="space-y-5">
+            <input type="text" id="vUrl" placeholder="Paste YouTube Link Here" 
+            class="w-full bg-slate-800 border border-slate-700 p-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 transition">
+            
+            <button onclick="start()" id="btn" class="w-full bg-blue-600 hover:bg-blue-500 p-4 rounded-xl font-bold text-lg shadow-lg active:scale-95 transition">
+                Start Live Stream
+            </button>
+        </div>
+        <div id="msg" class="mt-6 text-center text-slate-400 font-medium">System Ready</div>
+    </div>
+
+    <script>
+        async function start() {
+            const url = document.getElementById('vUrl').value;
+            const msg = document.getElementById('msg');
+            const btn = document.getElementById('btn');
+
+            if(!url) return alert("Please enter a URL!");
+
+            msg.innerText = "⏳ Requesting Cloud Engine...";
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/trigger', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url })
+                });
+
+                if(res.ok) {
+                    msg.innerText = "✅ Stream Sent to GitHub Server!";
+                    msg.classList.add('text-green-500');
+                } else {
+                    throw new Error();
+                }
+            } catch (e) {
+                msg.innerText = "❌ Error! Check Token/Settings.";
+                msg.classList.add('text-red-500');
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
