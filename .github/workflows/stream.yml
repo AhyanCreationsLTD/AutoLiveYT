@@ -1,4 +1,4 @@
-name: AutoLiveYT Engine
+Name: AutoLiveYT Engine
 on:
   repository_dispatch:
     types: [start_stream]
@@ -19,5 +19,19 @@ jobs:
 
       - name: Start Live Stream
         run: |
-          yt-dlp -f "best" -g "${{ github.event.client_payload.url }}" | xargs -I {} ffmpeg -re -i {} -c:v libx264 -preset ultrafast -b:v 3000k -maxrate 3000k -bufsize 6000k -pix_fmt yuv420p -g 60 -c:a aac -b:a 128k -f flv "rtmp://a.rtmp.youtube.com/live2/${{ secrets.YOUTUBE_STREAM_KEY }}"
+          # ১. User-Agent যোগ করা হয়েছে ইউটিউবের বট প্রোটেকশন এড়াতে
+          # ২. ভিডিও কোয়ালিটি এবং ফ্রেম রেট অপ্টিমাইজ করা হয়েছে
+          # ৩. লো-ল্যাটেন্সি মোড সেট করা হয়েছে যাতে লাইভ স্মুথ চলে
           
+          VIDEO_URL="${{ github.event.client_payload.url }}"
+          USER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
+          
+          DIRECT_URL=$(yt-dlp --user-agent "$USER_AGENT" -f "best" -g "$VIDEO_URL")
+          
+          ffmpeg -re -i "$DIRECT_URL" \
+            -c:v libx264 -preset ultrafast -tune zerolatency \
+            -b:v 3500k -maxrate 3500k -bufsize 7000k \
+            -pix_fmt yuv420p -g 60 -r 30 \
+            -c:a aac -b:a 128k -ar 44100 \
+            -f flv "rtmp://a.rtmp.youtube.com/live2/${{ secrets.YOUTUBE_STREAM_KEY }}"
+            
