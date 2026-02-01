@@ -3,53 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AutoLiveYT</title>
+    <title>AutoLiveYT Pro | Ultimate Control</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .glass { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(16px); }
+        .glow-blue { box-shadow: 0 0 25px rgba(59, 130, 246, 0.4); }
+        .glow-red { box-shadow: 0 0 25px rgba(239, 68, 68, 0.4); }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        .live-blink { animation: blink 1.2s infinite; background-color: #ef4444; }
+        @keyframes blink { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.1); } }
+    </style>
 </head>
-<body class="bg-slate-950 text-white flex items-center justify-center min-h-screen">
-    <div class="bg-slate-900 border border-slate-800 p-8 rounded-3xl shadow-2xl w-full max-w-md">
-        <h1 class="text-4xl font-black text-center text-blue-500 mb-2">AutoLiveYT</h1>
-        <p class="text-slate-500 text-center mb-8 text-sm uppercase tracking-widest">Cloud Control Panel</p>
+<body class="bg-[#020617] text-slate-200 flex items-center justify-center min-h-screen font-sans p-4">
 
-        <div class="space-y-5">
-            <input type="text" id="vUrl" placeholder="Paste YouTube Link Here" 
-            class="w-full bg-slate-800 border border-slate-700 p-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 transition">
-            
-            <button onclick="start()" id="btn" class="w-full bg-blue-600 hover:bg-blue-500 p-4 rounded-xl font-bold text-lg shadow-lg active:scale-95 transition">
-                Start Live Stream
-            </button>
+    <div class="glass border border-slate-800 p-8 rounded-[2.5rem] shadow-2xl w-full max-w-md glow-blue transition-all duration-500">
+        
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center px-4 py-1.5 rounded-full bg-slate-900/80 border border-slate-700 text-[10px] font-bold tracking-widest mb-5">
+                <span class="status-dot live-blink"></span> CLOUD ENGINE ONLINE
+            </div>
+            <h1 class="text-5xl font-black bg-gradient-to-br from-blue-400 via-cyan-300 to-blue-600 bg-clip-text text-transparent italic tracking-tighter">
+                AutoLiveYT
+            </h1>
+            <p class="text-slate-500 mt-2 text-[11px] font-semibold uppercase tracking-[0.2em]">Remote Control Interface</p>
         </div>
-        <div id="msg" class="mt-6 text-center text-slate-400 font-medium">System Ready</div>
+
+        <div class="space-y-4">
+            <div class="relative group">
+                <i class="fa-solid fa-link absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-blue-500 transition"></i>
+                <input type="text" id="vUrl" placeholder="Paste Video Link (YT/FB/Direct)" 
+                class="w-full bg-slate-950 border border-slate-800 p-4 pl-12 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition text-sm">
+            </div>
+
+            <div class="grid grid-cols-1 gap-3">
+                <button onclick="handleStream('start')" id="startBtn" class="w-full bg-blue-600 hover:bg-blue-500 p-4 rounded-2xl font-bold text-lg shadow-lg active:scale-95 transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-play"></i>
+                    <span id="startBtnText">Start Stream</span>
+                </button>
+
+                <button onclick="handleStream('stop')" id="stopBtn" class="w-full bg-transparent border-2 border-red-900/30 hover:border-red-600 hover:bg-red-600/10 p-4 rounded-2xl font-bold text-lg text-red-500 active:scale-95 transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-stop"></i>
+                    <span>Stop Stream</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="msg" class="mt-8 pt-6 border-t border-slate-800/50 text-center text-slate-500 text-xs flex flex-col items-center gap-3">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-circle-info"></i> <span id="statusText">System Ready for Deployment</span>
+            </div>
+            <a href="https://github.com/AhyanCreationsLTD/AutoLiveYT/actions" target="_blank" class="text-blue-500 hover:underline flex items-center gap-1">
+                <i class="fa-brands fa-github"></i> View Live Logs
+            </a>
+        </div>
     </div>
 
     <script>
-        async function start() {
+        async function handleStream(action) {
             const url = document.getElementById('vUrl').value;
-            const msg = document.getElementById('msg');
-            const btn = document.getElementById('btn');
+            const msg = document.getElementById('statusText');
+            const startBtn = document.getElementById('startBtn');
+            const startBtnText = document.getElementById('startBtnText');
 
-            if(!url) return alert("Please enter a URL!");
-
-            msg.innerText = "⏳ Requesting Cloud Engine...";
-            btn.disabled = true;
+            if(action === 'start' && !url) return alert("Please enter a video URL first!");
+            
+            // UI Update
+            msg.innerHTML = `<span class="animate-pulse">⏳ Requesting GitHub Engine...</span>`;
+            if(action === 'start') {
+                startBtn.disabled = true;
+                startBtnText.innerText = "Processing...";
+            }
 
             try {
-                const res = await fetch('/api/trigger', {
+                // এখানে আপনার API এন্ডপয়েন্ট (Start বা Stop এর জন্য)
+                const endpoint = action === 'start' ? '/api/trigger' : '/api/stop';
+                
+                const res = await fetch(endpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ url: url })
                 });
 
                 if(res.ok) {
-                    msg.innerText = "✅ Stream Sent to GitHub Server!";
-                    msg.classList.add('text-green-500');
+                    msg.innerHTML = action === 'start' 
+                        ? `<span class="text-green-500 font-bold">✅ Stream Injected Successfully!</span>` 
+                        : `<span class="text-red-500 font-bold">🛑 Stop Signal Sent to Server!</span>`;
+                    
+                    if(action === 'start') startBtnText.innerText = "Running...";
                 } else {
                     throw new Error();
                 }
             } catch (e) {
-                msg.innerText = "❌ Error! Check Token/Settings.";
-                msg.classList.add('text-red-500');
-                btn.disabled = false;
+                msg.innerHTML = `<span class="text-yellow-500">⚠ Error: Check Server Configuration</span>`;
+            } finally {
+                setTimeout(() => {
+                    startBtn.disabled = false;
+                    startBtnText.innerText = "Start Stream";
+                }, 4000);
             }
         }
     </script>
