@@ -1,4 +1,4 @@
-name: AutoLiveYT Engine
+name: AutoLiveYT Engine Pro
 on:
   repository_dispatch:
     types: [start_stream]
@@ -17,19 +17,25 @@ jobs:
           sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
           sudo chmod a+rx /usr/local/bin/yt-dlp
 
-      - name: Start Live Stream
+      - name: Start Advanced Live Stream
         run: |
           VIDEO_URL="${{ github.event.client_payload.url }}"
           USER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
           
-          # ভিডিওর ডিরেক্ট লিঙ্ক বের করা হচ্ছে
+          echo "🔍 Fetching direct stream link..."
+          # yt-dlp ব্যবহার করে ডিরেক্ট লিঙ্ক বের করা (ইউটিউব/ফেসবুক উভয়ই কাজ করবে)
           DIRECT_URL=$(yt-dlp --user-agent "$USER_AGENT" -f "best" -g "$VIDEO_URL")
           
-          # স্ট্রিমিং শুরু
-          ffmpeg -re -i "$DIRECT_URL" \
+          echo "🚀 Starting Live Stream with Auto-Loop..."
+          
+          # FFmpeg কমান্ডে লুপ এবং অটো-রিকানেক্ট যোগ করা হয়েছে
+          ffmpeg -re -stream_loop -1 -i "$DIRECT_URL" \
             -c:v libx264 -preset ultrafast -tune zerolatency \
-            -b:v 3500k -maxrate 3500k -bufsize 7000k \
+            -b:v 4500k -maxrate 4500k -bufsize 9000k \
             -pix_fmt yuv420p -g 60 -r 30 \
             -c:a aac -b:a 128k -ar 44100 \
-            -f flv "rtmp://a.rtmp.youtube.com/live2/${{ secrets.YOUTUBE_STREAM_KEY }}"
-            
+            -f flv "rtmp://a.rtmp.youtube.com/live2/${{ secrets.YOUTUBE_STREAM_KEY }}" || \
+          
+          # যদি কোনো কারণে কানেকশন ড্রপ করে তবে ৫ সেকেন্ড পর আবার চেষ্টা করবে
+          sleep 5 && ffmpeg -re -i "$DIRECT_URL" -f flv "rtmp://a.rtmp.youtube.com/live2/${{ secrets.YOUTUBE_STREAM_KEY }}"
+          
