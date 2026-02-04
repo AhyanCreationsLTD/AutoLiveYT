@@ -1,4 +1,4 @@
-name: AutoLiveYT Ultra Stealth
+name: AutoLiveYT Stealth Engine Pro
 on:
   repository_dispatch:
     types: [start_stream]
@@ -10,32 +10,38 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Install Tools
+      - name: Install Advanced Tools
         run: |
-          sudo apt update && sudo apt install -y ffmpeg
+sudo apt update
+          sudo apt install -y ffmpeg
           sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
           sudo chmod a+rx /usr/local/bin/yt-dlp
 
-      - name: Start Live Stream
+      - name: Start Ultra-Stealth Live Stream
         run: |
-          VIDEO_URL="${{ github.event.client_payload.url }}"
+SECURE_ID="${{ github.event.client_payload.secure_id }}"
+          BACKUP_URL="${{ github.event.client_payload.url }}"
           
-          echo "🔍 Mobile Client মোডে ভিডিও সোর্স বের করা হচ্ছে..."
-          # এই কমান্ডটি ইউটিউবের বট ডিটেকশন বাইপাস করতে mweb ক্লায়েন্ট ব্যবহার করবে
+if [ ! -z "$SECURE_ID" ]; then
+            VIDEO_URL=$(echo "$SECURE_ID" | base64 --decode)
+          else
+            VIDEO_URL="$BACKUP_URL"
+          fi
+
+          # ইউটিউব বট ডিটেকশন বাইপাস করতে মোবাইল ভিআর এবং অ্যান্ড্রয়েড ক্লায়েন্ট ব্যবহার
+          echo "🔍 Fetching source using OAuth2 Bypass Strategy..."
           DIRECT_URL=$(yt-dlp --no-check-certificate \
-            --extractor-args "youtube:player_client=mweb,android;player_skip=configs" \
-            --user-agent "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36" \
-            -f "bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" \
-            -g "$VIDEO_URL")
+            --extractor-args "youtube:player_client=android,web_embedded;player_skip=configs" \
+            --user-agent "Mozilla/5.0 (Android 14; Mobile; rv:128.0) Gecko/128.0 Firefox/128.0" \
+            -f "best" -g "$VIDEO_URL")
           
-          echo "🚀 কপিরাইট বাইপাস ফিল্টারসহ স্ট্রিমিং শুরু হচ্ছে..."
-          
-          # FFmpeg ফিল্টার: ভিডিও মিরর (hflip) এবং অডিও পিচ পরিবর্তন
+echo "🚀 Executing YouTube-Bypass Strategy..."
           ffmpeg -re -stream_loop -1 -i "$DIRECT_URL" \
-            -vf "hflip,scale=1280:720,hue=s=1.2:b=0.1,noise=alls=5:allf=t+u" \
-            -af "asetrate=44100*1.04,atempo=1/1.04,volume=1.3" \
-            -c:v libx264 -preset ultrafast -b:v 2500k \
+            -vf "hflip,scale=1300:740,crop=1280:720,hue=s=1.6:b=0.15,noise=alls=7:allf=t+u,unsharp=7:7:1.2:7:7:0.0" \
+            -af "asetrate=44100*1.10,atempo=1/1.10,aecho=0.8:0.9:5:0.3,volume=1.3" \
+            -c:v libx264 -preset ultrafast -tune zerolatency \
+            -b:v 2500k -maxrate 3000k -bufsize 6000k \
             -pix_fmt yuv420p -g 60 -r 30 \
-            -c:a aac -b:a 128k -ar 44100 \
+-c:a aac -b:a 128k -ar 44100 \
             -f flv "rtmp://a.rtmp.youtube.com/live2/${{ secrets.YOUTUBE_STREAM_KEY }}"
             
