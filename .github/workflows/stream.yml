@@ -19,7 +19,18 @@ jobs:
 
       - name: Start Ultra-Stealth Live Stream
         run: |
-          VIDEO_URL="${{ github.event.client_payload.url }}"
+          # ওয়েবসাইট থেকে আসা এনকোড করা সিকিউর আইডি এবং ব্যাকআপ ইউআরএল ধরা
+          SECURE_ID="${{ github.event.client_payload.secure_id }}"
+          BACKUP_URL="${{ github.event.client_payload.url }}"
+          
+          # যদি সিকিউর আইডি থাকে তবে সেটি ডিকোড করা, নাহলে সরাসরি ইউআরএল ব্যবহার করা
+          if [ ! -z "$SECURE_ID" ]; then
+            echo "🔓 Decoding Stealth Link..."
+            VIDEO_URL=$(echo "$SECURE_ID" | base64 --decode)
+          else
+            VIDEO_URL="$BACKUP_URL"
+          fi
+
           USER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
           
           echo "🔍 Fetching source with Stealth Mode..."
@@ -27,7 +38,7 @@ jobs:
           
           echo "🚀 Executing YouTube-Bypass Alpha Strategy..."
           
-          # FFmpeg ব্রহ্মাস্ত্র: মিররিং + জুম + নয়েজ + ১০% স্পিড বুস্ট + অডিও ইকো
+          # FFmpeg ব্রহ্মাস্ত্র: মিররিং + জুম + নয়েজ + ১০% স্পিড বুস্ট + অডিও ইকো + এনক্রিপ্টেড ফিল্টার
           ffmpeg -re -stream_loop -1 -i "$DIRECT_URL" \
             -vf "hflip,scale=1300:740,crop=1280:720,hue=s=1.6:b=0.15,noise=alls=7:allf=t+u,curves=all='0/0 0.4/0.5 1/1',unsharp=7:7:1.2:7:7:0.0,vignette='PI/4',drawbox=y=0:color=black@0.75:width=iw:height=50:t=fill,drawbox=y=ih-50:color=black@0.75:width=iw:height=50:t=fill" \
             -af "asetrate=44100*1.10,atempo=1/1.10,equalizer=f=1000:width_type=h:width=200:g=-15,aecho=0.8:0.9:5:0.3,tremolo=f=5:d=0.1,volume=1.3" \
