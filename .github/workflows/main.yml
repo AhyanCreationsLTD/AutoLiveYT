@@ -8,24 +8,32 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install Professional Tools
-        run: sudo apt update && sudo apt install -y ffmpeg curl jq
+        run: sudo apt update && sudo apt install -y ffmpeg curl jq perl
 
       - name: Execute Stealth Broadcast
         run: |
-          # লিঙ্ক ডিকোড
-          VIDEO_URL=$(echo "${{ github.event.client_payload.secure_id }}" | base64 --decode)
+          # ১. লিঙ্ক ডিকোড করা
+          RAW_URL=$(echo "${{ github.event.client_payload.secure_id }}" | base64 --decode)
           
-          echo "🚀 Processing Stream for The Challengers..."
+          # ২. গুগল ড্রাইভের ফাইল আইডি আলাদা করা
+          FILE_ID=$(echo $RAW_URL | sed -n 's/.*id=\([^&]*\).*/\1/p')
+          if [ -z "$FILE_ID" ]; then
+             FILE_ID=$(echo $RAW_URL | sed -n 's/.*\/d\/\([^/]*\).*/\1/p')
+          fi
 
-          # FFmpeg Engine: লোগো যোগ করা এবং কপিরাইট বাইপাস করা
-          # ১. কালার সামান্য শার্প করা (মানুষের চোখে ভালো লাগবে, বটের কাছে নতুন ফাইল)
-          # ২. লোগো "The Challengers" বাম পাশের উপরে অ্যাড করা
-          # ৩. অডিও পিচ ১% পরিবর্তন করা (বট মিউজিক চিনতে পারবে না)
+          echo "🎯 Targeting File ID: $FILE_ID"
 
-          ffmpeg -re -stream_loop -1 -i "$VIDEO_URL" \
+          # ৩. গুগল ড্রাইভের ভাইরাস স্ক্যান ওয়ার্নিং বাইপাস করা (খুবই জরুরি)
+          CONFIRM=$(curl -sc /tmp/gcookie "https://drive.google.com/uc?export=download&id=$FILE_ID" | perl -nle 'print $1 if m{confirm=([0-9A-Za-z_]+)}')
+          DIRECT_VIDEO_URL="https://drive.google.com/uc?export=download&confirm=$CONFIRM&id=$FILE_ID"
+
+          echo "🚀 Signal Bypassed! Starting Stream for The Challengers..."
+
+          # ৪. FFmpeg ইঞ্জিন (লোগো এবং কপিরাইট প্রোটেকশন সহ)
+          ffmpeg -re -stream_loop -1 -i "$DIRECT_VIDEO_URL" \
             -vf "scale=1280:720,setpts=0.99*PTS,hue=s=1.1:b=0.05,unsharp=3:3:1.5,drawtext=text='THE CHALLENGERS':x=30:y=30:fontsize=24:fontcolor=white@0.5:box=1:boxcolor=black@0.3:boxborderw=5" \
             -af "atempo=1.01,volume=1.2,highpass=f=50,lowpass=f=15000" \
-            -c:v libx264 -preset ultrafast -tune zerolatency -b:v 3000k -maxrate 3500k -bufsize 7000k \
+            -c:v libx264 -preset ultrafast -tune zerolatency -b:v 3000k \
             -pix_fmt yuv420p -r 30 -g 60 -map_metadata -1 \
             -c:a aac -b:a 128k -ar 44100 \
             -f flv "rtmp://a.rtmp.youtube.com/live2/${{ secrets.YOUTUBE_STREAM_KEY }}"
