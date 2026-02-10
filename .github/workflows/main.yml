@@ -1,4 +1,4 @@
-name: AutoLiveYT Engine V3 - Fixed
+name: AutoLiveYT Engine V3 - Ultimate
 on:
   repository_dispatch:
     types: [start_stream]
@@ -9,41 +9,35 @@ jobs:
     steps:
       - name: Setup Environment
         run: |
-          sudo apt update && sudo apt install -y ffmpeg jq curl
+          sudo apt update && sudo apt install -y ffmpeg
+          # yt-dlp এর লেটেস্ট ভার্সন ইনস্টল
+          sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
+          sudo chmod a+rx /usr/local/bin/yt-dlp
 
-      - name: Advanced Bypass & Stream
+      - name: Fetch and Stream
         run: |
-          # ভিডিও আইডি বের করা
+          # ভিডিও লিঙ্ক ডিকোড
           VIDEO_URL=$(echo "${{ github.event.client_payload.secure_id }}" | base64 --decode)
-          VIDEO_ID=$(echo $VIDEO_URL | sed -E 's/.*v=([^&]*).*/\1/' | sed -E 's/.*be\/([^?]*).*/\1/')
           
-          echo "🎯 Targeting Video ID: $VIDEO_ID"
-
-          # মাল্টিপল ইনভিডিয়াস এপিআই ট্রাই করা (কুকিজ ছাড়া বাইপাস)
-          DIRECT_URL=$(curl -s "https://invidious.projectsegfau.lt/api/v1/videos/$VIDEO_ID" | jq -r '.formatStreams[-1].url')
-
-          if [ -z "$DIRECT_URL" ] || [ "$DIRECT_URL" == "null" ]; then
-            echo "🔄 Backup API 1..."
-            DIRECT_URL=$(curl -s "https://inv.tux.rs/api/v1/videos/$VIDEO_ID" | jq -r '.formatStreams[-1].url')
-          fi
+          echo "🚀 Fetching Direct Link Using Bypass Strategy..."
           
-          if [ -z "$DIRECT_URL" ] || [ "$DIRECT_URL" == "null" ]; then
-            echo "🔄 Backup API 2..."
-            DIRECT_URL=$(curl -s "https://invidious.flokinet.to/api/v1/videos/$VIDEO_ID" | jq -r '.formatStreams[-1].url')
-          fi
-
-          if [ -z "$DIRECT_URL" ] || [ "$DIRECT_URL" == "null" ]; then
-            echo "❌ All APIs failed to fetch link."
+          # ইউটিউব বট ডিটেকশন বাইপাস করতে বিভিন্ন ক্লায়েন্ট ব্যবহার
+          DIRECT_URL=$(yt-dlp --no-check-certificate \
+            --extractor-args "youtube:player_client=android,web_embedded" \
+            -f "best" -g "$VIDEO_URL")
+          
+          if [ -z "$DIRECT_URL" ]; then
+            echo "❌ Failed to fetch video link. YouTube is blocking the request."
             exit 1
           fi
 
-          echo "🚀 Success! Streaming started..."
+          echo "✅ Link Acquired! Starting Stealth Stream..."
 
-          # FFmpeg বাইপাস ফিল্টার
+          # FFmpeg বাইপাস ফিল্টার (Pixel, Pitch and Audio Distortion)
           ffmpeg -re -stream_loop -1 -i "$DIRECT_URL" \
-            -vf "scale=1280:720,setpts=PTS/1.01,hue=s=1.2:b=0.1,noise=alls=1:allf=t+u" \
+            -vf "scale=1280:720,setpts=PTS/1.01,hue=s=1.2:b=0.1,noise=alls=1:allf=t+u,drawtext=text='LIVE':x=20:y=20:fontsize=24:fontcolor=white@0.3" \
             -af "atempo=1.01,asetrate=44100*0.99,volume=1.2" \
-            -c:v libx264 -preset ultrafast -b:v 2500k \
+            -c:v libx264 -preset ultrafast -b:v 2500k -maxrate 3000k -bufsize 6000k \
             -pix_fmt yuv420p -r 29.97 -g 60 \
             -c:a aac -b:a 128k -ar 44100 \
             -f flv "rtmp://a.rtmp.youtube.com/live2/${{ secrets.YOUTUBE_STREAM_KEY }}"
