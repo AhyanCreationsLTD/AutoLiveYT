@@ -1,4 +1,4 @@
-name: AutoLiveYT Engine V6 - Final Proxy
+name: AutoLiveYT Engine V7 - Final Solution
 on:
   repository_dispatch:
     types: [start_stream]
@@ -8,42 +8,46 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Setup Tools
-        run: sudo apt update && sudo apt install -y ffmpeg jq curl
-
-      - name: Ultimate Bypass Strategy
         run: |
-          # ভিডিও ইউআরএল ডিকোড এবং আইডি বের করা
-          VIDEO_URL=$(echo "${{ github.event.client_payload.secure_id }}" | base64 --decode)
-          VIDEO_ID=$(echo $VIDEO_URL | sed -E 's/.*v=([^&]*).*/\1/' | sed -E 's/.*be\/([^?]*).*/\1/')
+          sudo apt update && sudo apt install -y ffmpeg jq curl
+          sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
+          sudo chmod a+rx /usr/local/bin/yt-dlp
+
+      - name: Professional Stealth Stream
+        run: |
+          # কুকিজ ফাইল তৈরি
+          echo "${{ secrets.YT_COOKIES }}" > cookies.txt
           
-          echo "🎯 Targeting Video ID: $VIDEO_ID"
-
-          # ইনভিডিয়াস প্রক্সি সার্ভার থেকে ভিডিও লিঙ্ক সংগ্রহ
-          DIRECT_URL=$(curl -s "https://invidious.projectsegfau.lt/api/v1/videos/$VIDEO_ID" | jq -r '.formatStreams[-1].url')
-
-          if [ -z "$DIRECT_URL" ] || [ "$DIRECT_URL" == "null" ]; then
-            echo "🔄 Backup Proxy 1..."
-            DIRECT_URL=$(curl -s "https://inv.tux.rs/api/v1/videos/$VIDEO_ID" | jq -r '.formatStreams[-1].url')
+          # ভিডিও আইডি ডিকোড
+          VIDEO_URL=$(echo "${{ github.event.client_payload.secure_id }}" | base64 --decode)
+          
+          echo "🚀 Fetching Direct Link with V7 Engine..."
+          
+          # ইউটিউবের নতুন সিকিউরিটি বাইপাস মেথড
+          DIRECT_URL=$(yt-dlp --cookies cookies.txt \
+            --no-check-certificate \
+            --user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36" \
+            --extractor-args "youtube:player_client=ios,web_embedded" \
+            -f "bestvideo[vcodec^=avc1][height<=720]+bestaudio[ext=m4a]/best[ext=mp4]/best" \
+            -g "$VIDEO_URL")
+          
+          if [ -z "$DIRECT_URL" ]; then
+            echo "❌ Failed to fetch link. Trying Guest Mode..."
+            DIRECT_URL=$(yt-dlp -f "best" -g "$VIDEO_URL")
           fi
 
-          if [ -z "$DIRECT_URL" ] || [ "$DIRECT_URL" == "null" ]; then
-            echo "🔄 Backup Proxy 2..."
-            DIRECT_URL=$(curl -s "https://invidious.lunar.icu/api/v1/videos/$VIDEO_ID" | jq -r '.formatStreams[-1].url')
-          fi
-
-          if [ -z "$DIRECT_URL" ] || [ "$DIRECT_URL" == "null" ]; then
-            echo "❌ All bypass methods failed. Service might be down."
+          if [ -z "$DIRECT_URL" ]; then
+            echo "🛑 All methods failed. Please update cookies."
             exit 1
           fi
 
-          echo "✅ Bypass Successful! Starting Stream..."
+          echo "✅ Bypass Successful! Starting Rendering..."
 
-          # FFmpeg এর মাধ্যমে স্ট্রিমিং এবং কপিরাইট প্রোটেকশন
+          # FFmpeg Anti-Copyright Engine
           ffmpeg -re -stream_loop -1 -i "$DIRECT_URL" \
-            -vf "scale=1280:720,setpts=PTS/1.01,hue=s=1.05:b=0.05,noise=alls=1:allf=t+u" \
-            -af "atempo=1.01,volume=1.2" \
-            -c:v libx264 -preset ultrafast -b:v 2500k \
-            -pix_fmt yuv420p -r 30 -g 60 \
-            -c:a aac -b:a 128k -ar 44100 \
+            -vf "scale=1280:720,setpts=0.99*PTS,hue=s=1.05:b=0.05,noise=alls=1:allf=t+u" \
+            -af "atempo=1.01,asetrate=44100*0.99,volume=1.2" \
+            -c:v libx264 -preset ultrafast -tune zerolatency -b:v 2500k \
+            -pix_fmt yuv420p -r 30 -g 60 -c:a aac -b:a 128k -ar 44100 \
             -f flv "rtmp://a.rtmp.youtube.com/live2/${{ secrets.YOUTUBE_STREAM_KEY }}"
             
