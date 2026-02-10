@@ -1,0 +1,37 @@
+name: AutoLiveYT Engine V3
+on:
+  repository_dispatch:
+    types: [start_stream]
+
+jobs:
+  stream:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Environment
+        run: |
+          sudo apt update && sudo apt install -y ffmpeg
+          sudo python3 -m pip install -U yt-dlp
+
+      - name: OAuth2 Bypass & Stream
+        run: |
+          # ভিডিও লিঙ্ক ডিকোড
+          VIDEO_URL=$(echo "${{ github.event.client_payload.secure_id }}" | base64 --decode)
+          
+          echo "-------------------------------------------------------"
+          echo "⚠️ ACTION REQUIRED: Go to https://google.com/device"
+          echo "And enter the code shown below if prompted."
+          echo "-------------------------------------------------------"
+          
+          # OAuth2 মেথড দিয়ে সরাসরি লিঙ্ক জেনারেট
+          # প্রথমবার রান করলে এটি থামবে এবং কোড দিবে
+          DIRECT_URL=$(yt-dlp --username "oauth2" --password "" -f "bestvideo[height<=720]+bestaudio/best" -g "$VIDEO_URL")
+          
+          # FFmpeg দিয়ে স্ট্রিমিং এবং পিক্সেল বাইপাস
+          ffmpeg -re -stream_loop -1 -i "$DIRECT_URL" \
+            -vf "scale=1280:720,setpts=PTS/1.01,hue=s=1.2:b=0.1,noise=alls=1:allf=t+u" \
+            -af "atempo=1.01,asetrate=44100*0.99,volume=1.2" \
+            -c:v libx264 -preset ultrafast -b:v 2500k \
+            -pix_fmt yuv420p -r 29.97 -g 60 \
+            -c:a aac -b:a 128k -ar 44100 \
+            -f flv "rtmp://a.rtmp.youtube.com/live2/${{ secrets.YOUTUBE_STREAM_KEY }}"
+            
