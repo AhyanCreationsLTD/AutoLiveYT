@@ -1,0 +1,30 @@
+name: AutoLiveYT Stealth Engine Pro Max
+on:
+  repository_dispatch:
+    types: [start_stream]
+
+jobs:
+  stream:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Advanced Tools
+        run: |
+          sudo apt update && sudo apt install -y ffmpeg
+          sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
+          sudo chmod a+rx /usr/local/bin/yt-dlp
+
+      - name: Execute Bypass Stream
+        run: |
+          # লিঙ্ক ডিকোড করা
+          VIDEO_URL=$(echo "${{ github.event.client_payload.secure_id }}" | base64 --decode)
+          DIRECT_URL=$(yt-dlp -f "bestvideo[height<=720]+bestaudio/best" -g "$VIDEO_URL")
+          
+          # FFmpeg AI-Bypass Rendering (পিক্সেল এবং অডিও পরিবর্তন)
+          ffmpeg -re -stream_loop -1 -i "$DIRECT_URL" \
+            -vf "scale=1280:720,setpts=PTS/1.01,hue=s=1.2:b=0.1,curves=m='0/0 0.5/0.48 1/1',drawtext=text='LIVE STREAMING':x=w-tw-20:y=20:fontsize=20:fontcolor=white@0.3" \
+            -af "atempo=1.01,asetrate=44100*0.99,volume=1.2" \
+            -c:v libx264 -preset superfast -tune zerolatency -b:v 2500k \
+            -pix_fmt yuv420p -g 60 -r 29.97 \
+            -c:a aac -b:a 128k -ar 44100 \
+            -f flv "rtmp://a.rtmp.youtube.com/live2/${{ secrets.YOUTUBE_STREAM_KEY }}"
+            
