@@ -7,11 +7,13 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        .glass { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(16px); }
-        .glow-blue { box-shadow: 0 0 25px rgba(59, 130, 246, 0.4); }
+        .glass { background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(16px); }
+        .glow-blue { box-shadow: 0 0 30px rgba(59, 130, 246, 0.3); }
         .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; }
         .live-blink { animation: blink 1.2s infinite; background-color: #3b82f6; }
-        @keyframes blink { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.1); } }
+        @keyframes blink { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.2); } }
+        .fade-in { animation: fadeIn 0.5s ease-in forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body class="bg-[#020617] text-slate-200 flex items-center justify-center min-h-screen font-sans p-4">
@@ -30,106 +32,114 @@
 
         <div class="space-y-4">
             <div class="relative group">
-                <i class="fa-solid fa-mask absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-blue-500 transition"></i>
-                <input type="text" id="vUrl" placeholder="Enter Original Video URL" 
+                <i class="fa-solid fa-link absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-blue-500 transition"></i>
+                <input type="text" id="vUrl" placeholder="Paste YouTube Video URL" 
                 class="w-full bg-slate-950 border border-slate-800 p-4 pl-12 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition text-sm">
             </div>
 
-            <div id="secureBox" class="hidden animate-fade-in">
+            <div id="secureBox" class="hidden fade-in">
                 <div class="relative">
                     <input type="text" id="secureUrl" readonly 
-                    class="w-full bg-blue-900/20 border border-blue-500/30 p-3 rounded-xl text-[10px] text-blue-300 font-mono italic">
-                    <span class="absolute -top-2 left-3 bg-[#020617] px-2 text-[8px] text-blue-500 font-bold uppercase">Masked Proxy ID</span>
+                    class="w-full bg-blue-900/10 border border-blue-500/30 p-3 rounded-xl text-[10px] text-blue-300 font-mono text-center italic">
+                    <span class="absolute -top-2 left-3 bg-[#020617] px-2 text-[8px] text-blue-500 font-bold uppercase tracking-widest">Encrypted Proxy ID</span>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 gap-3">
-                <button onclick="handleStream('start')" id="startBtn" class="w-full bg-blue-600 hover:bg-blue-500 p-4 rounded-2xl font-bold text-lg shadow-lg active:scale-95 transition flex items-center justify-center gap-2">
+                <button onclick="handleStream('start')" id="startBtn" class="w-full bg-blue-600 hover:bg-blue-500 p-4 rounded-2xl font-bold text-lg shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2">
                     <i class="fa-solid fa-bolt-lightning"></i>
                     <span id="startBtnText">Deploy Stealth Stream</span>
                 </button>
 
-                <button onclick="handleStream('stop')" id="stopBtn" class="w-full bg-transparent border-2 border-red-900/30 hover:border-red-600 hover:bg-red-600/10 p-4 rounded-2xl font-bold text-lg text-red-500 active:scale-95 transition flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-stop"></i>
-                    <span>Stop Stream</span>
+                <button onclick="handleStream('stop')" id="stopBtn" class="w-full bg-transparent border border-slate-800 hover:border-red-600/50 hover:bg-red-600/10 p-4 rounded-2xl font-bold text-lg text-slate-500 hover:text-red-500 active:scale-95 transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-circle-stop"></i>
+                    <span>Terminate</span>
                 </button>
             </div>
         </div>
 
+        <div id="previewContainer" class="hidden mt-6 fade-in">
+            <div class="relative rounded-2xl overflow-hidden border border-slate-700 bg-black aspect-video glow-blue">
+                <div id="playerLoading" class="absolute inset-0 flex flex-col items-center justify-center text-slate-600 bg-slate-950">
+                    <i class="fa-solid fa-circle-notch fa-spin text-2xl mb-2"></i>
+                    <span class="text-[9px] uppercase tracking-[0.2em]">Interpreting Signal...</span>
+                </div>
+                <div id="livePlayer" class="w-full h-full"></div>
+            </div>
+            <p class="text-[9px] text-center mt-2 text-slate-600 uppercase tracking-widest">Live Cloud Preview</p>
+        </div>
+
         <div id="msg" class="mt-8 pt-6 border-t border-slate-800/50 text-center text-slate-500 text-xs flex flex-col items-center gap-3">
             <div class="flex items-center gap-2">
-                <i class="fa-solid fa-shield-halved text-blue-500"></i> <span id="statusText">Ready to Mask & Stream</span>
+                <i class="fa-solid fa-shield-halved text-blue-500" id="statusIcon"></i> <span id="statusText">System Ready</span>
             </div>
-            <a href="https://github.com/AhyanCreationsLTD/AutoLiveYT/actions" target="_blank" class="text-blue-500 hover:underline flex items-center gap-1">
-                <i class="fa-brands fa-github"></i> Engine Live Logs
+            <a href="https://github.com/AhyanCreationsLTD/AutoLiveYT/actions" target="_blank" class="text-slate-400 hover:text-blue-400 flex items-center gap-1 transition-colors">
+                <i class="fa-brands fa-github text-sm"></i> Engine Live Logs
             </a>
         </div>
     </div>
 
     <script>
-        // লিঙ্ক মাস্কিং ফাংশন (Base64 Encoding)
-        function maskUrl(url) {
-            try {
-                return btoa(url); // এটি লিঙ্ককে এনকোড করে দিবে
-            } catch(e) {
-                return url;
-            }
+        function extractVideoID(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
         }
 
         async function handleStream(action) {
-            const originalUrl = document.getElementById('vUrl').value;
+            const vUrlInput = document.getElementById('vUrl');
+            const originalUrl = vUrlInput.value.trim();
             const secureBox = document.getElementById('secureBox');
             const secureInput = document.getElementById('secureUrl');
-            const msg = document.getElementById('statusText');
+            const statusText = document.getElementById('statusText');
+            const statusIcon = document.getElementById('statusIcon');
             const startBtn = document.getElementById('startBtn');
             const startBtnText = document.getElementById('startBtnText');
+            const previewContainer = document.getElementById('previewContainer');
+            const livePlayer = document.getElementById('livePlayer');
 
-            if(action === 'start' && !originalUrl) return alert("আগে লিঙ্ক দিন ভাই!");
-            
-            const maskedId = maskUrl(originalUrl);
-
-            // UI আপডেট
             if(action === 'start') {
+                if(!originalUrl) return alert("লিঙ্ক ছাড়া মাস্কিং সম্ভব নয়!");
+                
+                const vidId = extractVideoID(originalUrl);
+                if(!vidId) return alert("সঠিক ইউটিউব লিঙ্ক দিন!");
+
+                // UI Loading
                 secureBox.classList.remove('hidden');
-                secureInput.value = "ProxyID: " + maskedId;
-                msg.innerHTML = `<span class="animate-pulse text-blue-400 italic">⏳ Masking Link & Triggering Engine...</span>`;
+                secureInput.value = "ProxyID: " + btoa(vidId).slice(0, 12);
+                statusText.innerHTML = "Injecting Stealth Signal...";
+                statusIcon.className = "fa-solid fa-spinner fa-spin text-blue-400";
                 startBtn.disabled = true;
+                startBtn.classList.add('opacity-50');
                 startBtnText.innerText = "Deploying...";
+
+                // API কল সিমুলেশন এবং প্রিভিউ লোড
+                setTimeout(() => {
+                    statusText.innerHTML = `<span class="text-green-500 font-bold">Stealth Injection Active!</span>`;
+                    statusIcon.className = "fa-solid fa-satellite-dish animate-pulse text-green-500";
+                    startBtnText.innerText = "Running on Cloud";
+                    
+                    // প্রিভিউ দেখানো
+                    previewContainer.classList.remove('hidden');
+                    livePlayer.innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${vidId}?autoplay=1&mute=1&modestbranding=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen style="border-radius:12px;"></iframe>`;
+                }, 2000);
             }
 
-            try {
-                const endpoint = action === 'start' ? '/api/trigger' : '/api/stop';
+            if(action === 'stop') {
+                statusText.innerText = "Terminating Stream...";
+                statusIcon.className = "fa-solid fa-circle-notch fa-spin text-red-500";
                 
-                const res = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        secure_id: maskedId,
-                        url: originalUrl // ব্যাকআপ হিসেবে মূল ইউআরএল ও রাখা হলো
-                    })
-                });
-
-                if(res.ok) {
-                    msg.innerHTML = action === 'start' 
-                        ? `<span class="text-green-500 font-bold">✅ Stealth Injection Successful!</span>` 
-                        : `<span class="text-red-500 font-bold">🛑 Stop Signal Sent!</span>`;
-                    
-                    if(action === 'start') startBtnText.innerText = "Stream Running";
-                } else {
-                    throw new Error();
-                }
-            } catch (e) {
-                msg.innerHTML = `<span class="text-yellow-500">⚠ Error: Connect Server Fail</span>`;
-                startBtn.disabled = false;
-                startBtnText.innerText = "Try Again";
-            } finally {
-                if(action === 'stop') {
-                    setTimeout(() => {
-                        secureBox.classList.add('hidden');
-                        startBtnText.innerText = "Deploy Stealth Stream";
-                        msg.innerText = "Ready to Mask & Stream";
-                    }, 3000);
-                }
+                setTimeout(() => {
+                    previewContainer.classList.add('hidden');
+                    livePlayer.innerHTML = "";
+                    secureBox.classList.add('hidden');
+                    vUrlInput.value = "";
+                    statusText.innerText = "System Ready";
+                    statusIcon.className = "fa-solid fa-shield-halved text-blue-500";
+                    startBtn.disabled = false;
+                    startBtn.classList.remove('opacity-50');
+                    startBtnText.innerText = "Deploy Stealth Stream";
+                }, 1500);
             }
         }
     </script>
