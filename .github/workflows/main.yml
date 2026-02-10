@@ -1,46 +1,30 @@
-name: AutoLiveYT Engine V5 - Final Survival
-on:
-  repository_dispatch:
-    types: [start_stream]
-
-jobs:
-  stream:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Setup Environment
+      - name: Ultimate Bypass Strategy
         run: |
-          sudo apt update && sudo apt install -y ffmpeg jq
-          # yt-dlp এর লেটেস্ট নাইটলি ভার্সন ইনস্টল (সিকিউরিটি বাইপাস সহ)
-          sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
-          sudo chmod a+rx /usr/local/bin/yt-dlp
-
-      - name: Professional Stealth Stream
-        run: |
-          echo "${{ secrets.YT_COOKIES }}" > cookies.txt
           VIDEO_URL=$(echo "${{ github.event.client_payload.secure_id }}" | base64 --decode)
+          VIDEO_ID=$(echo $VIDEO_URL | sed -E 's/.*v=([^&]*).*/\1/' | sed -E 's/.*be\/([^?]*).*/\1/')
           
-          echo "🚀 Initiating High-Level Bypass..."
-          
-          # ইউটিউব থেকে ভিডিও টানার সবচেয়ে শক্তিশালী মেথড
-          DIRECT_URL=$(yt-dlp --cookies cookies.txt \
-            --no-check-certificate \
-            --client-certificate "" \
-            --user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36" \
-            --extractor-args "youtube:player_client=ios,web_embedded;player_skip=configs,web_page" \
-            -f "best[vcodec^=avc1][height<=720]+bestaudio[ext=m4a]/best" \
-            -g "$VIDEO_URL")
-          
-          if [ -z "$DIRECT_URL" ]; then
-             echo "❌ Cookie Expired or Blocked. Falling back to Guest-Session..."
-             DIRECT_URL=$(yt-dlp -f "best" -g "$VIDEO_URL")
+          echo "🎯 Targeting Video ID: $VIDEO_ID"
+
+          # সরাসরি ইউটিউব থেকে না নিয়ে ইনভিডিয়াস এপিআই ব্যবহার করে লিঙ্ক জেনারেট
+          DIRECT_URL=$(curl -s "https://invidious.projectsegfau.lt/api/v1/videos/$VIDEO_ID" | jq -r '.formatStreams[-1].url')
+
+          if [ -z "$DIRECT_URL" ] || [ "$DIRECT_URL" == "null" ]; then
+            echo "🔄 Backup Proxy 1..."
+            DIRECT_URL=$(curl -s "https://inv.tux.rs/api/v1/videos/$VIDEO_ID" | jq -r '.formatStreams[-1].url')
           fi
 
-          echo "✅ Link Found! Injecting to RTMP Server..."
+          if [ -z "$DIRECT_URL" ]; then
+            echo "❌ All bypass methods failed."
+            exit 1
+          fi
+
+          echo "✅ Bypass Successful! Streaming started..."
 
           ffmpeg -re -stream_loop -1 -i "$DIRECT_URL" \
-            -vf "scale=1280:720,setpts=0.99*PTS,hue=s=1.05:b=0.05,noise=alls=1:allf=t+u" \
-            -af "atempo=1.01,asetrate=44100*0.99,volume=1.1" \
-            -c:v libx264 -preset ultrafast -tune zerolatency -b:v 2500k \
-            -pix_fmt yuv420p -r 30 -g 60 -c:a aac -b:a 128k -ar 44100 \
+            -vf "scale=1280:720,setpts=PTS/1.01,hue=s=1.1,noise=alls=1:allf=t+u" \
+            -af "atempo=1.01,volume=1.2" \
+            -c:v libx264 -preset ultrafast -b:v 2500k \
+            -pix_fmt yuv420p -r 30 -g 60 \
+            -c:a aac -b:a 128k -ar 44100 \
             -f flv "rtmp://a.rtmp.youtube.com/live2/${{ secrets.YOUTUBE_STREAM_KEY }}"
             
