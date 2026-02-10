@@ -1,4 +1,4 @@
-name: AutoLiveYT Stealth Engine Pro
+name: AutoLiveYT Stealth Engine Pro Max
 on:
   repository_dispatch:
     types: [start_stream]
@@ -12,36 +12,35 @@ jobs:
 
       - name: Install Advanced Tools
         run: |
-sudo apt update
+          sudo apt update
           sudo apt install -y ffmpeg
           sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
           sudo chmod a+rx /usr/local/bin/yt-dlp
 
       - name: Start Ultra-Stealth Live Stream
         run: |
-SECURE_ID="${{ github.event.client_payload.secure_id }}"
+          # লিং ডিকোড এবং সোর্স কালেকশন
+          SECURE_ID="${{ github.event.client_payload.secure_id }}"
           BACKUP_URL="${{ github.event.client_payload.url }}"
           
-if [ ! -z "$SECURE_ID" ]; then
+          if [ ! -z "$SECURE_ID" ]; then
             VIDEO_URL=$(echo "$SECURE_ID" | base64 --decode)
           else
             VIDEO_URL="$BACKUP_URL"
           fi
 
-          # ইউটিউব বট ডিটেকশন বাইপাস করতে মোবাইল ভিআর এবং অ্যান্ড্রয়েড ক্লায়েন্ট ব্যবহার
-          echo "🔍 Fetching source using OAuth2 Bypass Strategy..."
-          DIRECT_URL=$(yt-dlp --no-check-certificate \
-            --extractor-args "youtube:player_client=android,web_embedded;player_skip=configs" \
-            --user-agent "Mozilla/5.0 (Android 14; Mobile; rv:128.0) Gecko/128.0 Firefox/128.0" \
-            -f "best" -g "$VIDEO_URL")
+          # ডাইরেক্ট লিঙ্ক বের করা (একটু র্যান্ডম কুকিজ ব্যবহার করে)
+          DIRECT_URL=$(yt-dlp -f "bestvideo[height<=720]+bestaudio/best" -g "$VIDEO_URL")
           
-echo "🚀 Executing YouTube-Bypass Strategy..."
+          echo "🚀 Starting AI-Bypass Rendering..."
+
+          # এই কমান্ডটি ভিডিওটিকে এমনভাবে পরিবর্তন করবে যা মানুষের চোখে ধরা পড়বে না কিন্তু রোবটকে কনফিউজ করবে
           ffmpeg -re -stream_loop -1 -i "$DIRECT_URL" \
-            -vf "hflip,scale=1300:740,crop=1280:720,hue=s=1.6:b=0.15,noise=alls=7:allf=t+u,unsharp=7:7:1.2:7:7:0.0" \
-            -af "asetrate=44100*1.10,atempo=1/1.10,aecho=0.8:0.9:5:0.3,volume=1.3" \
-            -c:v libx264 -preset ultrafast -tune zerolatency \
-            -b:v 2500k -maxrate 3000k -bufsize 6000k \
-            -pix_fmt yuv420p -g 60 -r 30 \
--c:a aac -b:a 128k -ar 44100 \
+            -vf "scale=1300:-1,zoompan=z='min(zoom+0.0015,1.5)':d=1:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)',crop=1280:720,hue=h=2:s=1.1,eq=contrast=1.05:brightness=0.02:gamma=1.1,noise=alls=2:allf=t+u" \
+            -af "asetrate=44100*1.02,atempo=1/1.02,volume=1.2,highpass=f=200,lowpass=f=3000" \
+            -c:v libx264 -preset superfast -tune zerolatency \
+            -b:v 2800k -maxrate 3500k -bufsize 7000k \
+            -pix_fmt yuv420p -g 30 -r 25 \
+            -c:a aac -b:a 128k -ar 44100 \
             -f flv "rtmp://a.rtmp.youtube.com/live2/${{ secrets.YOUTUBE_STREAM_KEY }}"
             
