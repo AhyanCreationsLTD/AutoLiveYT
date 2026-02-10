@@ -1,4 +1,4 @@
-name: AutoLiveYT Engine V4 - Anti-Copyright & Cookie Mode
+name: AutoLiveYT Engine V4.1 - Fixed
 on:
   repository_dispatch:
     types: [start_stream]
@@ -10,41 +10,34 @@ jobs:
       - name: Setup Environment
         run: |
           sudo apt update && sudo apt install -y ffmpeg jq
-          # yt-dlp এর লেটেস্ট ভার্সন ইনস্টল
           sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
           sudo chmod a+rx /usr/local/bin/yt-dlp
 
       - name: Stealth Bypass & Professional Stream
         run: |
-          # ১. আপনার GitHub Secrets থেকে কুকিজ নিয়ে ফাইল তৈরি
           echo "${{ secrets.YT_COOKIES }}" > cookies.txt
-          
-          # ২. ওয়েবসাইট থেকে পাঠানো লিঙ্ক ডিকোড করা
           VIDEO_URL=$(echo "${{ github.event.client_payload.secure_id }}" | base64 --decode)
           
-          echo "🚀 Fetching Direct Link Using Cookies & Stealth Mode..."
+          echo "🚀 Fetching Direct Link with V4.1 Engine..."
           
-          # ৩. কুকিজ এবং অ্যান্ড্রয়েড ইউজার এজেন্ট ব্যবহার করে লিঙ্ক সংগ্রহ
           DIRECT_URL=$(yt-dlp --cookies cookies.txt \
             --no-check-certificate \
-            --user-agent "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6099.144 Mobile Safari/537.36" \
-            --extractor-args "youtube:player_client=android,web_embedded" \
-            -f "bestvideo[height<=720]+bestaudio/best" -g "$VIDEO_URL")
+            --user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36" \
+            -f "best[vcodec^=avc1][height<=720]+bestaudio[ext=m4a]/best[ext=mp4]/best" \
+            -g "$VIDEO_URL")
           
           if [ -z "$DIRECT_URL" ]; then
-            echo "❌ Failed to fetch video link. Check your cookies or link."
-            exit 1
+            echo "❌ Failed to fetch link. Checking backup method..."
+            DIRECT_URL=$(yt-dlp --cookies cookies.txt -f "best" -g "$VIDEO_URL")
           fi
 
-          echo "✅ Link Acquired! Starting Anti-Copyright Rendering..."
+          echo "✅ Link Acquired! Rendering..."
 
-          # ৪. FFmpeg এর মাধ্যমে ভিডিওর সিগনেচার পরিবর্তন (কপিরাইট বাইপাস)
-          # এখানে পিক্সেল নয়েজ, হালকা কালার চেঞ্জ, স্পিড পরিবর্তন এবং অডিওর পিচ শিফট করা হয়েছে।
           ffmpeg -re -stream_loop -1 -i "$DIRECT_URL" \
             -vf "scale=1280:720,setpts=0.99*PTS,hue=s=1.1:b=0.1,curves=m='0/0 0.5/0.48 1/1',noise=alls=1:allf=t+u" \
-            -af "atempo=1.01,asetrate=44100*0.99,volume=1.1,pan=stereo|c0=c0|c1=c1" \
-            -c:v libx264 -preset ultrafast -tune zerolatency -b:v 2500k -maxrate 3000k -bufsize 6000k \
-            -map_metadata -1 -metadata title="Original Content" -metadata artist="Owner" \
+            -af "atempo=1.01,asetrate=44100*0.99,volume=1.1" \
+            -c:v libx264 -preset ultrafast -tune zerolatency -b:v 2500k \
+            -map_metadata -1 -metadata title="Live" \
             -pix_fmt yuv420p -r 30 -g 60 \
             -c:a aac -b:a 128k -ar 44100 \
             -f flv "rtmp://a.rtmp.youtube.com/live2/${{ secrets.YOUTUBE_STREAM_KEY }}"
