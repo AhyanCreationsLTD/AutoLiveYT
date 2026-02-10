@@ -1,11 +1,24 @@
+name: AutoLiveYT Engine V6 - Final Proxy
+on:
+  repository_dispatch:
+    types: [start_stream]
+
+jobs:
+  stream:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Tools
+        run: sudo apt update && sudo apt install -y ffmpeg jq curl
+
       - name: Ultimate Bypass Strategy
         run: |
+          # ভিডিও ইউআরএল ডিকোড এবং আইডি বের করা
           VIDEO_URL=$(echo "${{ github.event.client_payload.secure_id }}" | base64 --decode)
           VIDEO_ID=$(echo $VIDEO_URL | sed -E 's/.*v=([^&]*).*/\1/' | sed -E 's/.*be\/([^?]*).*/\1/')
           
           echo "🎯 Targeting Video ID: $VIDEO_ID"
 
-          # সরাসরি ইউটিউব থেকে না নিয়ে ইনভিডিয়াস এপিআই ব্যবহার করে লিঙ্ক জেনারেট
+          # ইনভিডিয়াস প্রক্সি সার্ভার থেকে ভিডিও লিঙ্ক সংগ্রহ
           DIRECT_URL=$(curl -s "https://invidious.projectsegfau.lt/api/v1/videos/$VIDEO_ID" | jq -r '.formatStreams[-1].url')
 
           if [ -z "$DIRECT_URL" ] || [ "$DIRECT_URL" == "null" ]; then
@@ -13,15 +26,21 @@
             DIRECT_URL=$(curl -s "https://inv.tux.rs/api/v1/videos/$VIDEO_ID" | jq -r '.formatStreams[-1].url')
           fi
 
-          if [ -z "$DIRECT_URL" ]; then
-            echo "❌ All bypass methods failed."
+          if [ -z "$DIRECT_URL" ] || [ "$DIRECT_URL" == "null" ]; then
+            echo "🔄 Backup Proxy 2..."
+            DIRECT_URL=$(curl -s "https://invidious.lunar.icu/api/v1/videos/$VIDEO_ID" | jq -r '.formatStreams[-1].url')
+          fi
+
+          if [ -z "$DIRECT_URL" ] || [ "$DIRECT_URL" == "null" ]; then
+            echo "❌ All bypass methods failed. Service might be down."
             exit 1
           fi
 
-          echo "✅ Bypass Successful! Streaming started..."
+          echo "✅ Bypass Successful! Starting Stream..."
 
+          # FFmpeg এর মাধ্যমে স্ট্রিমিং এবং কপিরাইট প্রোটেকশন
           ffmpeg -re -stream_loop -1 -i "$DIRECT_URL" \
-            -vf "scale=1280:720,setpts=PTS/1.01,hue=s=1.1,noise=alls=1:allf=t+u" \
+            -vf "scale=1280:720,setpts=PTS/1.01,hue=s=1.05:b=0.05,noise=alls=1:allf=t+u" \
             -af "atempo=1.01,volume=1.2" \
             -c:v libx264 -preset ultrafast -b:v 2500k \
             -pix_fmt yuv420p -r 30 -g 60 \
