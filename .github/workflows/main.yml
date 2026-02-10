@@ -1,4 +1,4 @@
-name: AutoLiveYT Engine V4.1 - Fixed
+name: AutoLiveYT Engine V4.2 - Final Fix
 on:
   repository_dispatch:
     types: [start_stream]
@@ -13,31 +13,35 @@ jobs:
           sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
           sudo chmod a+rx /usr/local/bin/yt-dlp
 
-      - name: Stealth Bypass & Professional Stream
+      - name: Professional Stealth Stream
         run: |
+          # কুকিজ সেটআপ
           echo "${{ secrets.YT_COOKIES }}" > cookies.txt
+          
           VIDEO_URL=$(echo "${{ github.event.client_payload.secure_id }}" | base64 --decode)
           
-          echo "🚀 Fetching Direct Link with V4.1 Engine..."
+          echo "🚀 Fetching Direct Link with V4.2 Bypass..."
           
+          # ইউটিউবকে ধোঁকা দেওয়ার জন্য ব্রাউজার ইমিউলেশন
           DIRECT_URL=$(yt-dlp --cookies cookies.txt \
             --no-check-certificate \
             --user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36" \
-            -f "best[vcodec^=avc1][height<=720]+bestaudio[ext=m4a]/best[ext=mp4]/best" \
+            --extractor-args "youtube:player_client=web_embedded,web" \
+            -f "bestvideo[vcodec^=avc1]+bestaudio[ext=m4a]/best[ext=mp4]/best" \
             -g "$VIDEO_URL")
           
           if [ -z "$DIRECT_URL" ]; then
-            echo "❌ Failed to fetch link. Checking backup method..."
-            DIRECT_URL=$(yt-dlp --cookies cookies.txt -f "best" -g "$VIDEO_URL")
+            echo "⚠️ Normal fetch failed, trying Force-Format mode..."
+            DIRECT_URL=$(yt-dlp --cookies cookies.txt -f 18/22/135/95 -g "$VIDEO_URL")
           fi
 
-          echo "✅ Link Acquired! Rendering..."
+          echo "✅ Stream Link Acquired! Rendering..."
 
+          # FFmpeg Anti-Copyright Filters
           ffmpeg -re -stream_loop -1 -i "$DIRECT_URL" \
-            -vf "scale=1280:720,setpts=0.99*PTS,hue=s=1.1:b=0.1,curves=m='0/0 0.5/0.48 1/1',noise=alls=1:allf=t+u" \
+            -vf "scale=1280:720,setpts=0.99*PTS,hue=s=1.1:b=0.1,noise=alls=1:allf=t+u" \
             -af "atempo=1.01,asetrate=44100*0.99,volume=1.1" \
             -c:v libx264 -preset ultrafast -tune zerolatency -b:v 2500k \
-            -map_metadata -1 -metadata title="Live" \
             -pix_fmt yuv420p -r 30 -g 60 \
             -c:a aac -b:a 128k -ar 44100 \
             -f flv "rtmp://a.rtmp.youtube.com/live2/${{ secrets.YOUTUBE_STREAM_KEY }}"
