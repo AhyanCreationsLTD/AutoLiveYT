@@ -3,143 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AutoLiveYT Pro | Stealth Link Generator</title>
+    <title>AutoLiveYT | Mobile Console</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        .glass { background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(16px); }
-        .glow-blue { box-shadow: 0 0 30px rgba(59, 130, 246, 0.3); }
-        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; }
-        .live-blink { animation: blink 1.2s infinite; background-color: #3b82f6; }
-        @keyframes blink { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.2); } }
-        .fade-in { animation: fadeIn 0.5s ease-in forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        body { background-color: #05070a; color: #60a5fa; font-family: 'Courier New', monospace; }
+        .glass { background: rgba(10, 15, 25, 0.9); border: 1px solid #1e3a8a; box-shadow: 0 0 20px rgba(30, 58, 138, 0.5); }
+        .terminal-input { background: #000; border: 1px solid #1e40af; color: #93c5fd; }
+        .btn-deploy { background: linear-gradient(45deg, #1e40af, #3b82f6); transition: 0.3s; }
+        .btn-deploy:active { transform: scale(0.95); }
+        .status-box { font-size: 10px; color: #3b82f6; text-transform: uppercase; letter-spacing: 2px; }
     </style>
 </head>
-<body class="bg-[#020617] text-slate-200 flex items-center justify-center min-h-screen font-sans p-4">
+<body class="flex items-center justify-center min-h-screen p-4">
 
-    <div class="glass border border-slate-800 p-8 rounded-[2.5rem] shadow-2xl w-full max-w-md glow-blue transition-all duration-500">
-        
-        <div class="text-center mb-8">
-            <div class="inline-flex items-center px-4 py-1.5 rounded-full bg-slate-900/80 border border-slate-700 text-[10px] font-bold tracking-widest mb-5 text-blue-400">
-                <span class="status-dot live-blink"></span> STEALTH MODE ACTIVE
-            </div>
-            <h1 class="text-5xl font-black bg-gradient-to-br from-blue-400 via-cyan-300 to-blue-600 bg-clip-text text-transparent italic tracking-tighter">
-                AutoLiveYT
-            </h1>
-            <p class="text-slate-500 mt-2 text-[11px] font-semibold uppercase tracking-[0.2em]">Bypass & Link Masking Interface</p>
+    <div class="glass w-full max-w-md p-6 rounded-3xl">
+        <div class="text-center mb-6">
+            <h1 class="text-2xl font-bold tracking-tighter italic">SYSTEM.AUTOLIVE_V3</h1>
+            <div class="status-box mt-2"><span class="animate-pulse">●</span> Console Ready</div>
         </div>
 
         <div class="space-y-4">
-            <div class="relative group">
-                <i class="fa-solid fa-link absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-blue-500 transition"></i>
-                <input type="text" id="vUrl" placeholder="Paste YouTube Video URL" 
-                class="w-full bg-slate-950 border border-slate-800 p-4 pl-12 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition text-sm">
+            <div>
+                <label class="text-[10px] ml-2 font-bold">SOURCE_URL</label>
+                <input type="text" id="vUrl" placeholder="https://youtube.com/watch?v=..." 
+                class="terminal-input w-full p-4 rounded-xl outline-none focus:border-blue-400 mt-1">
             </div>
 
-            <div id="secureBox" class="hidden fade-in">
-                <div class="relative">
-                    <input type="text" id="secureUrl" readonly 
-                    class="w-full bg-blue-900/10 border border-blue-500/30 p-3 rounded-xl text-[10px] text-blue-300 font-mono text-center italic">
-                    <span class="absolute -top-2 left-3 bg-[#020617] px-2 text-[8px] text-blue-500 font-bold uppercase tracking-widest">Encrypted Proxy ID</span>
-                </div>
-            </div>
+            <button onclick="triggerStream()" id="mainBtn" class="btn-deploy w-full p-4 rounded-xl text-white font-black text-sm flex items-center justify-center gap-2">
+                <i class="fa-solid fa-terminal"></i> INITIALIZE DEPLOYMENT
+            </button>
 
-            <div class="grid grid-cols-1 gap-3">
-                <button onclick="handleStream('start')" id="startBtn" class="w-full bg-blue-600 hover:bg-blue-500 p-4 rounded-2xl font-bold text-lg shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-bolt-lightning"></i>
-                    <span id="startBtnText">Deploy Stealth Stream</span>
-                </button>
-
-                <button onclick="handleStream('stop')" id="stopBtn" class="w-full bg-transparent border border-slate-800 hover:border-red-600/50 hover:bg-red-600/10 p-4 rounded-2xl font-bold text-lg text-slate-500 hover:text-red-500 active:scale-95 transition-all flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-circle-stop"></i>
-                    <span>Terminate</span>
-                </button>
+            <div id="authNotice" class="hidden bg-blue-900/20 border border-blue-500/30 p-4 rounded-xl text-[11px] text-blue-300">
+                <i class="fa-solid fa-circle-info mr-2"></i>
+                Check GitHub Actions log for the 8-digit OAuth code.
             </div>
         </div>
 
-        <div id="previewContainer" class="hidden mt-6 fade-in">
-            <div class="relative rounded-2xl overflow-hidden border border-slate-700 bg-black aspect-video glow-blue">
-                <div id="playerLoading" class="absolute inset-0 flex flex-col items-center justify-center text-slate-600 bg-slate-950">
-                    <i class="fa-solid fa-circle-notch fa-spin text-2xl mb-2"></i>
-                    <span class="text-[9px] uppercase tracking-[0.2em]">Interpreting Signal...</span>
-                </div>
-                <div id="livePlayer" class="w-full h-full"></div>
-            </div>
-            <p class="text-[9px] text-center mt-2 text-slate-600 uppercase tracking-widest">Live Cloud Preview</p>
+        <div id="log" class="mt-6 p-4 bg-black/50 border border-slate-800 rounded-xl h-24 overflow-y-auto text-[10px] text-slate-500 font-mono">
+            > Waiting for command...
         </div>
 
-        <div id="msg" class="mt-8 pt-6 border-t border-slate-800/50 text-center text-slate-500 text-xs flex flex-col items-center gap-3">
-            <div class="flex items-center gap-2">
-                <i class="fa-solid fa-shield-halved text-blue-500" id="statusIcon"></i> <span id="statusText">System Ready</span>
-            </div>
-            <a href="https://github.com/AhyanCreationsLTD/AutoLiveYT/actions" target="_blank" class="text-slate-400 hover:text-blue-400 flex items-center gap-1 transition-colors">
-                <i class="fa-brands fa-github text-sm"></i> Engine Live Logs
-            </a>
+        <div class="mt-4 flex justify-between items-center text-[10px]">
+            <a href="https://github.com/settings/tokens" target="_blank" class="hover:underline text-slate-600">GH_TOKEN_AUTH</a>
+            <span class="text-slate-700">ENCRYPTION: AES-256</span>
         </div>
     </div>
 
     <script>
-        function extractVideoID(url) {
-            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-            const match = url.match(regExp);
-            return (match && match[2].length === 11) ? match[2] : null;
-        }
+        async function triggerStream() {
+            const url = document.getElementById('vUrl').value;
+            const log = document.getElementById('log');
+            const authNotice = document.getElementById('authNotice');
+            
+            if(!url) return alert("URL Required!");
 
-        async function handleStream(action) {
-            const vUrlInput = document.getElementById('vUrl');
-            const originalUrl = vUrlInput.value.trim();
-            const secureBox = document.getElementById('secureBox');
-            const secureInput = document.getElementById('secureUrl');
-            const statusText = document.getElementById('statusText');
-            const statusIcon = document.getElementById('statusIcon');
-            const startBtn = document.getElementById('startBtn');
-            const startBtnText = document.getElementById('startBtnText');
-            const previewContainer = document.getElementById('previewContainer');
-            const livePlayer = document.getElementById('livePlayer');
+            log.innerHTML += `<br>> Encrypting URL: ${btoa(url).slice(0,10)}...`;
+            log.innerHTML += `<br>> Sending Dispatch Signal...`;
 
-            if(action === 'start') {
-                if(!originalUrl) return alert("লিঙ্ক ছাড়া মাস্কিং সম্ভব নয়!");
-                
-                const vidId = extractVideoID(originalUrl);
-                if(!vidId) return alert("সঠিক ইউটিউব লিঙ্ক দিন!");
+            try {
+                const res = await fetch('/api/stream', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ secure_id: btoa(url) })
+                });
 
-                // UI Loading
-                secureBox.classList.remove('hidden');
-                secureInput.value = "ProxyID: " + btoa(vidId).slice(0, 12);
-                statusText.innerHTML = "Injecting Stealth Signal...";
-                statusIcon.className = "fa-solid fa-spinner fa-spin text-blue-400";
-                startBtn.disabled = true;
-                startBtn.classList.add('opacity-50');
-                startBtnText.innerText = "Deploying...";
-
-                // API কল সিমুলেশন এবং প্রিভিউ লোড
-                setTimeout(() => {
-                    statusText.innerHTML = `<span class="text-green-500 font-bold">Stealth Injection Active!</span>`;
-                    statusIcon.className = "fa-solid fa-satellite-dish animate-pulse text-green-500";
-                    startBtnText.innerText = "Running on Cloud";
-                    
-                    // প্রিভিউ দেখানো
-                    previewContainer.classList.remove('hidden');
-                    livePlayer.innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${vidId}?autoplay=1&mute=1&modestbranding=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen style="border-radius:12px;"></iframe>`;
-                }, 2000);
-            }
-
-            if(action === 'stop') {
-                statusText.innerText = "Terminating Stream...";
-                statusIcon.className = "fa-solid fa-circle-notch fa-spin text-red-500";
-                
-                setTimeout(() => {
-                    previewContainer.classList.add('hidden');
-                    livePlayer.innerHTML = "";
-                    secureBox.classList.add('hidden');
-                    vUrlInput.value = "";
-                    statusText.innerText = "System Ready";
-                    statusIcon.className = "fa-solid fa-shield-halved text-blue-500";
-                    startBtn.disabled = false;
-                    startBtn.classList.remove('opacity-50');
-                    startBtnText.innerText = "Deploy Stealth Stream";
-                }, 1500);
+                if(res.ok) {
+                    log.innerHTML += `<br><span class="text-green-500">> SIGNAL_SENT_SUCCESSFULLY</span>`;
+                    authNotice.classList.remove('hidden');
+                } else {
+                    log.innerHTML += `<br><span class="text-red-500">> ERROR: DISPATCH_FAILED</span>`;
+                }
+            } catch (e) {
+                log.innerHTML += `<br>> CONNECTION_LOST`;
             }
         }
     </script>
